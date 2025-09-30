@@ -675,10 +675,16 @@ export default function UnoGame() {
 
   // ---------- 主渲染 ----------
   return (
-    <div className="p-4">
+    <div className="p-4 min-h-screen relative">
       {screen === "menu" && (
-        <div className="flex flex-col gap-3 max-w-sm">
-          <h1 className="text-2xl font-bold">UNO 网页演示</h1>
+        <div
+          className="absolute inset-0 bg-cover bg-center opacity-20"
+          style={{ backgroundImage: "url('/images/cards/card_back.jpg')" }}
+        ></div>
+      )}
+      {screen === "menu" && (
+        <div className="flex flex-col gap-3 max-w-sm mx-auto h-screen justify-center relative z-10">
+          <h1 className="text-2xl font-bold text-center">UNO 网页演示</h1>
           <button
             onClick={startGame}
             className="px-4 py-2 bg-green-500 text-white rounded"

@@ -2,13 +2,6 @@ import React, { useState, useEffect, useRef } from "react";
 
 // UNO 网页演示版（含主菜单、规则、卡牌图鉴、功能牌、跳过抽牌逻辑）
 const COLORS = ["yellow", "green", "blue", "red"];
-const COLOR_CLASS = {
-  yellow: "bg-yellow-400 text-black",
-  green: "bg-green-600 text-white",
-  blue: "bg-blue-600 text-white",
-  red: "bg-red-600 text-white",
-  black: "bg-black text-white",
-};
 
 // 卡牌图片映射
 const CARD_IMAGE_MAP = {
@@ -83,7 +76,7 @@ function getCardImage(card) {
   const isWildCard = card.value === "wild" || card.value === "+4";
   const color = isWildCard ? "black" : card.color;
   const key = `${color}_${card.value}`;
-  const imageName = CARD_IMAGE_MAP[key] || "card_back.png";
+  const imageName = CARD_IMAGE_MAP[key] || "card_back.jpg";
   return `/images/cards/${imageName}`;
 }
 
@@ -163,6 +156,18 @@ export default function UnoGame() {
     }
     // 翻开一张作为弃牌顶
     let top = deckCopy.pop();
+
+    // 如果弃牌堆顶是万能牌，则继续抽牌直到抽到非万能牌
+    while (
+      top.color === "black" &&
+      (top.value === "wild" || top.value === "+4")
+    ) {
+      // 将万能牌放回牌堆底部
+      deckCopy.unshift(top);
+      // 重新抽一张牌
+      top = deckCopy.pop();
+    }
+
     setDeck(deckCopy);
     setPlayers(hands);
     setDiscardPile([top]);
@@ -610,6 +615,31 @@ export default function UnoGame() {
     sample.push({ id: id(), color: "black", value: "wild" });
     sample.push({ id: id(), color: "black", value: "+4" });
 
+    // 添加卡背和颜色选择图片示例
+    const additionalCards = [
+      { id: "cardback", name: "卡背", image: "/images/cards/card_back.jpg" },
+      {
+        id: "red_choose",
+        name: "红色选择",
+        image: "/images/color-choose/red_choose.jpg",
+      },
+      {
+        id: "yellow_choose",
+        name: "黄色选择",
+        image: "/images/color-choose/yellow_choose.jpg",
+      },
+      {
+        id: "green_choose",
+        name: "绿色选择",
+        image: "/images/color-choose/green_choose.jpg",
+      },
+      {
+        id: "blue_choose",
+        name: "蓝色选择",
+        image: "/images/color-choose/blue_choose.jpg",
+      },
+    ];
+
     return (
       <div>
         <h2 className="text-xl font-semibold mb-2">卡牌图鉴（示例）</h2>
@@ -619,6 +649,15 @@ export default function UnoGame() {
               <img
                 src={getCardImage(c)}
                 alt={`${c.color} ${c.value}`}
+                className="w-full h-full object-cover rounded"
+              />
+            </div>
+          ))}
+          {additionalCards.map((c) => (
+            <div key={c.id} className="p-1 rounded">
+              <img
+                src={c.image}
+                alt={c.name}
                 className="w-full h-full object-cover rounded"
               />
             </div>
@@ -683,55 +722,105 @@ export default function UnoGame() {
               {aiThinking && currentPlayer !== 0 && "（思考中...）"}
             </div>
             <div>出牌方向: {direction === 1 ? "顺时针" : "逆时针"}</div>
-            <div className="ml-auto">牌堆: {deck.length} 张</div>
           </div>
 
           <div className="flex justify-around mb-3">
-            <div
-              className={currentPlayer === 1 ? "bg-yellow-200 p-2 rounded" : ""}
-            >
-              左侧 AI 手牌: {players[1].length}
-            </div>
-            <div
-              className={currentPlayer === 2 ? "bg-yellow-200 p-2 rounded" : ""}
-            >
-              上方 AI 手牌: {players[2].length}
-            </div>
-            <div
-              className={currentPlayer === 3 ? "bg-yellow-200 p-2 rounded" : ""}
-            >
-              右侧 AI 手牌: {players[3].length}
-            </div>
-          </div>
-
-          <div className="flex justify-center mb-4 items-center">
-            {discardPile.length > 0 && (
-              <>
-                {/* 当弃牌堆顶是万能牌且已选择颜色时，显示颜色图案 */}
-                {discardPile[discardPile.length - 1].color !== "black" &&
-                  (discardPile[discardPile.length - 1].value === "wild" ||
-                    discardPile[discardPile.length - 1].value === "+4") && (
-                    <div className="w-12 h-12 flex items-center justify-center rounded mr-2">
-                      <img
-                        src={`/images/color-choose/${
-                          discardPile[discardPile.length - 1].color
-                        }_choose.jpg`}
-                        alt={discardPile[discardPile.length - 1].color}
-                        className="w-full h-full object-cover rounded"
-                      />
-                    </div>
-                  )}
-                <div className="w-20 h-28 flex items-center justify-center rounded">
+            <div className="flex flex-col items-center">
+              <div className="text-center mb-1">左侧 AI</div>
+              <div
+                className={
+                  currentPlayer === 1 ? "bg-yellow-200 p-2 rounded" : ""
+                }
+              >
+                <div className="w-14 h-22 flex items-center justify-center rounded">
                   <img
-                    src={getCardImage(discardPile[discardPile.length - 1])}
-                    alt={`${discardPile[discardPile.length - 1].color} ${
-                      discardPile[discardPile.length - 1].value
-                    }`}
+                    src="/images/cards/card_back.jpg"
+                    alt="AI手牌"
                     className="w-full h-full object-cover rounded"
                   />
                 </div>
-              </>
-            )}
+              </div>
+              <div className="mt-1">x{players[1].length}</div>
+            </div>
+            <div className="flex flex-col items-center">
+              <div className="text-center mb-1">上方 AI</div>
+              <div
+                className={
+                  currentPlayer === 2 ? "bg-yellow-200 p-2 rounded" : ""
+                }
+              >
+                <div className="w-14 h-22 flex items-center justify-center rounded">
+                  <img
+                    src="/images/cards/card_back.jpg"
+                    alt="AI手牌"
+                    className="w-full h-full object-cover rounded"
+                  />
+                </div>
+              </div>
+              <div className="mt-1">x{players[2].length}</div>
+            </div>
+            <div className="flex flex-col items-center">
+              <div className="text-center mb-1">右侧 AI</div>
+              <div
+                className={
+                  currentPlayer === 3 ? "bg-yellow-200 p-2 rounded" : ""
+                }
+              >
+                <div className="w-14 h-22 flex items-center justify-center rounded">
+                  <img
+                    src="/images/cards/card_back.jpg"
+                    alt="AI手牌"
+                    className="w-full h-full object-cover rounded"
+                  />
+                </div>
+              </div>
+              <div className="mt-1">x{players[3].length}</div>
+            </div>
+          </div>
+
+          <div className="flex justify-start mb-4 items-center">
+            {/* 牌堆显示 */}
+            <div className="flex flex-col items-center mr-8">
+              <div className="w-14 h-22 flex items-center justify-center rounded">
+                <img
+                  src="/images/cards/card_back.jpg"
+                  alt="牌堆"
+                  className="w-full h-full object-cover rounded"
+                />
+              </div>
+              <div className="mt-1">牌堆: {deck.length} 张</div>
+            </div>
+
+            {/* 弃牌堆显示 */}
+            <div className="flex-grow flex justify-center">
+              {discardPile.length > 0 && (
+                <>
+                  {/* 当弃牌堆顶是万能牌且已选择颜色时，显示颜色图案 */}
+                  {discardPile[discardPile.length - 1].color !== "black" &&
+                    (discardPile[discardPile.length - 1].value === "wild" ||
+                      discardPile[discardPile.length - 1].value === "+4") && (
+                      <div className="w-12 h-12 flex items-center justify-center rounded mr-2">
+                        <img
+                          src={`/images/color-choose/${
+                            discardPile[discardPile.length - 1].color
+                          }_choose.jpg`}
+                          alt={discardPile[discardPile.length - 1].color}
+                          className="w-full h-full object-cover rounded"
+                        />
+                      </div>
+                    )}
+                  <div className="w-20 h-28 flex items-center justify-center rounded">
+                    <img
+                      src={getCardImage(discardPile[discardPile.length - 1])}
+                      alt={`${discardPile[discardPile.length - 1].color} ${
+                        discardPile[discardPile.length - 1].value
+                      }`}
+                      className="w-full h-full object-cover rounded"
+                    />
+                  </div>
+                </>
+              )}
+            </div>
           </div>
 
           {/* 操作按钮 */}

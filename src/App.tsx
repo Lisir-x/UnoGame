@@ -128,7 +128,9 @@ function canPlayOn(card: Card, topCard: Card): boolean {
 }
 
 export default function UnoGame() {
-  const [screen, setScreen] = useState("menu"); // menu | rules | cards | game
+  const [screen, setScreen] = useState("menu"); // menu | rules | cards | game | loading
+  const [loadingProgress, setLoadingProgress] = useState(0);
+  const [loadingError, setLoadingError] = useState<string | null>(null);
 
   const [deck, setDeck] = useState<Card[]>([]);
   const [players, setPlayers] = useState<Card[][]>([[], [], [], []]);
@@ -156,6 +158,64 @@ export default function UnoGame() {
   );
 
   const aiTimerRef = useRef<number | null>(null);
+
+  // 预加载所有图片
+  const preloadGameImages = () => {
+    setScreen("loading");
+    setLoadingProgress(0);
+    setLoadingError(null);
+    
+    // 获取所有需要预加载的图片URL
+    const cardImageUrls: string[] = [];
+    Object.values(CARD_IMAGE_MAP).forEach(imageName => {
+      cardImageUrls.push(`/images/cards/${imageName}`);
+    });
+    
+    const colorChooseImages = [
+      '/images/color-choose/red_choose.jpg',
+      '/images/color-choose/yellow_choose.jpg',
+      '/images/color-choose/green_choose.jpg',
+      '/images/color-choose/blue_choose.jpg'
+    ];
+    
+    const allImageUrls = [...cardImageUrls, ...colorChooseImages];
+    const totalImages = allImageUrls.length;
+    let loadedImages = 0;
+    
+    // 创建图片加载Promise数组
+    const imagePromises = allImageUrls.map(url => {
+      return new Promise<void>((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => {
+          loadedImages++;
+          setLoadingProgress(Math.round((loadedImages / totalImages) * 100));
+          resolve();
+        };
+        img.onerror = () => {
+          loadedImages++;
+          setLoadingProgress(Math.round((loadedImages / totalImages) * 100));
+          reject(new Error(`Failed to load image: ${url}`));
+        };
+        img.src = url;
+      });
+    });
+    
+    Promise.all(imagePromises)
+      .then(() => {
+        // 预加载成功，进入菜单界面
+        setScreen("menu");
+      })
+      .catch(error => {
+        // 预加载失败，显示错误信息
+        setLoadingError(error.message);
+        console.error("Image preloading failed:", error);
+      });
+  };
+
+  // 页面加载时开始预加载图片
+  useEffect(() => {
+    preloadGameImages();
+  }, []);
 
   // ---------- 游戏初始化 ----------
   function startGame() {
@@ -708,6 +768,30 @@ export default function UnoGame() {
   // ---------- 主渲染 ----------
   return (
     <div className="p-2 sm:p-4 min-h-screen relative">
+      {screen === "loading" && (
+        <div className="flex flex-col items-center justify-center h-screen">
+          <h2 className="text-2xl font-bold mb-4">正在加载游戏资源...</h2>
+          <div className="w-64 h-6 bg-gray-200 rounded-full overflow-hidden">
+            <div 
+              className="h-full bg-blue-500 transition-all duration-300"
+              style={{ width: `${loadingProgress}%` }}
+            ></div>
+          </div>
+          <div className="mt-2 text-lg">{loadingProgress}%</div>
+          {loadingError && (
+            <div className="mt-4 text-red-500">
+              <p>加载失败: {loadingError}</p>
+              <button
+                onClick={preloadGameImages}
+                className="mt-2 px-4 py-2 bg-blue-500 text-white rounded"
+              >
+                重新尝试
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
       {screen === "menu" && (
         <div
           className="absolute inset-0 bg-cover bg-center opacity-20"

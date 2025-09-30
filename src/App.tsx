@@ -1,32 +1,17 @@
 import React, { useState, useEffect, useRef } from "react";
 
 // UNO 网页演示版（含主菜单、规则、卡牌图鉴、功能牌、跳过抽牌逻辑）
-const COLORS = ["red", "yellow", "green", "blue"];
+const COLORS = ["yellow", "green", "blue", "red"];
 const COLOR_CLASS = {
-  red: "bg-red-600 text-white",
   yellow: "bg-yellow-400 text-black",
   green: "bg-green-600 text-white",
   blue: "bg-blue-600 text-white",
+  red: "bg-red-600 text-white",
   black: "bg-black text-white",
 };
 
 // 卡牌图片映射
 const CARD_IMAGE_MAP = {
-  // 红色卡牌
-  red_0: "red_0.jpg",
-  red_1: "red_1.jpg",
-  red_2: "red_2.jpg",
-  red_3: "red_3.jpg",
-  red_4: "red_4.jpg",
-  red_5: "red_5.jpg",
-  red_6: "red_6.jpg",
-  red_7: "red_7.jpg",
-  red_8: "red_8.jpg",
-  red_9: "red_9.jpg",
-  red_skip: "red_skip.jpg",
-  red_reverse: "red_reverse.jpg",
-  "red_+2": "red_draw2.jpg",
-
   // 黄色卡牌
   yellow_0: "yellow_0.jpg",
   yellow_1: "yellow_1.jpg",
@@ -71,6 +56,21 @@ const CARD_IMAGE_MAP = {
   blue_skip: "blue_skip.jpg",
   blue_reverse: "blue_reverse.jpg",
   "blue_+2": "blue_draw2.jpg",
+
+  // 红色卡牌
+  red_0: "red_0.jpg",
+  red_1: "red_1.jpg",
+  red_2: "red_2.jpg",
+  red_3: "red_3.jpg",
+  red_4: "red_4.jpg",
+  red_5: "red_5.jpg",
+  red_6: "red_6.jpg",
+  red_7: "red_7.jpg",
+  red_8: "red_8.jpg",
+  red_9: "red_9.jpg",
+  red_skip: "red_skip.jpg",
+  red_reverse: "red_reverse.jpg",
+  "red_+2": "red_draw2.jpg",
 
   // 黑色万能牌
   black_wild: "wild.jpg",
@@ -734,9 +734,13 @@ export default function UnoGame() {
                 <button
                   key={c}
                   onClick={() => onChooseColor(c)}
-                  className={`px-4 py-2 rounded ${COLOR_CLASS[c]}`}
+                  className="w-16 h-16 p-0 border-0 rounded cursor-pointer"
                 >
-                  {c}
+                  <img
+                    src={`/images/color-choose/${c}_choose.jpg`}
+                    alt={c}
+                    className="w-full h-full object-cover rounded"
+                  />
                 </button>
               ))}
             </div>

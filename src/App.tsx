@@ -12,6 +12,21 @@ const COLOR_CLASS = {
 
 // 卡牌图片映射
 const CARD_IMAGE_MAP = {
+  // 红色卡牌
+  red_0: "red_0.jpg",
+  red_1: "red_1.jpg",
+  red_2: "red_2.jpg",
+  red_3: "red_3.jpg",
+  red_4: "red_4.jpg",
+  red_5: "red_5.jpg",
+  red_6: "red_6.jpg",
+  red_7: "red_7.jpg",
+  red_8: "red_8.jpg",
+  red_9: "red_9.jpg",
+  red_skip: "red_skip.jpg",
+  red_reverse: "red_reverse.jpg",
+  "red_+2": "red_draw2.jpg",
+
   // 黄色卡牌
   yellow_0: "yellow_0.jpg",
   yellow_1: "yellow_1.jpg",
@@ -57,21 +72,6 @@ const CARD_IMAGE_MAP = {
   blue_reverse: "blue_reverse.jpg",
   "blue_+2": "blue_draw2.jpg",
 
-  // 红色卡牌
-  red_0: "red_0.jpg",
-  red_1: "red_1.jpg",
-  red_2: "red_2.jpg",
-  red_3: "red_3.jpg",
-  red_4: "red_4.jpg",
-  red_5: "red_5.jpg",
-  red_6: "red_6.jpg",
-  red_7: "red_7.jpg",
-  red_8: "red_8.jpg",
-  red_9: "red_9.jpg",
-  red_skip: "red_skip.jpg",
-  red_reverse: "red_reverse.jpg",
-  "red_+2": "red_draw2.jpg",
-
   // 黑色万能牌
   black_wild: "wild.jpg",
   "black_+4": "wild_draw4.jpg",
@@ -79,7 +79,10 @@ const CARD_IMAGE_MAP = {
 
 // 获取卡牌图片路径的函数
 function getCardImage(card) {
-  const key = `${card.color}_${card.value}`;
+  // 对于万能牌，始终使用黑色作为颜色，这样即使选择了颜色也仍然显示黑色万能牌
+  const isWildCard = card.value === "wild" || card.value === "+4";
+  const color = isWildCard ? "black" : card.color;
+  const key = `${color}_${card.value}`;
   const imageName = CARD_IMAGE_MAP[key] || "card_back.png";
   return `/images/cards/${imageName}`;
 }
@@ -276,8 +279,7 @@ export default function UnoGame() {
 
     if (card.value === "wild") {
       if (playerIndex === 0) {
-        // 人类需要选择颜色：暂不切换回合，等待 chooseColor
-        setChooseColor({ cardId: card.id, playerIndex, plus4: false });
+        // 人类需要选择颜色：这个逻辑现在在 onPlayerConfirmPlay 中处理
         return;
       } else {
         // AI 自动选择颜色：选择手中最多颜色
@@ -305,7 +307,7 @@ export default function UnoGame() {
 
     if (card.value === "+4") {
       if (playerIndex === 0) {
-        setChooseColor({ cardId: card.id, playerIndex, plus4: true });
+        // 人类需要选择颜色和抽牌：这个逻辑现在在 onPlayerConfirmPlay 中处理
         return;
       } else {
         const hand = players[playerIndex];
@@ -392,16 +394,24 @@ export default function UnoGame() {
 
   // ---------- 玩家行为（出牌 / 跳过 / 提示） ----------
   // 玩家点击手牌出牌
-  function onPlayerPlayCard(cardIndex) {
+  function onPlayerPlayCard(cardIndex, updatedCard = null) {
     if (screen !== "game" || currentPlayer !== 0 || winner !== null) return;
     const hand = players[0].slice();
-    const card = hand[cardIndex];
+    const card = updatedCard || hand[cardIndex];
     const top = discardPile[discardPile.length - 1];
-    if (!canPlayOn(card, top)) return; // 不允许出牌
+    if (!updatedCard && !canPlayOn(card, top)) return; // 不允许出牌
 
-    // 出牌
-    hand.splice(cardIndex, 1);
-    setPlayers((prev) => prev.map((h, i) => (i === 0 ? hand : h)));
+    // 出牌（从手牌中移除）
+    if (!updatedCard) {
+      // 普通牌出牌逻辑
+      hand.splice(cardIndex, 1);
+      setPlayers((prev) => prev.map((h, i) => (i === 0 ? hand : h)));
+    } else {
+      // 万能牌出牌逻辑（已选择颜色）
+      const newHand = hand.filter((_, idx) => idx !== cardIndex);
+      setPlayers((prev) => prev.map((h, i) => (i === 0 ? newHand : h)));
+    }
+
     applyCardToDiscard(card);
 
     // 如果之前是通过抽牌获得的，则清空那状态
@@ -410,8 +420,27 @@ export default function UnoGame() {
     setLastDrawnCardId(null);
 
     // 处理功能牌效果（包括可能需要选择颜色）
-    handleCardEffectPlayed(card, 0);
-    if (hand.length === 0) setWinner(0);
+    if (!updatedCard) {
+      handleCardEffectPlayed(card, 0);
+    } else {
+      // 万能牌已选择颜色，直接处理效果
+      if (card.value === "+4") {
+        const target = getNextIndex(0, 1);
+        drawCards(target, 4);
+        const nextIdx = getNextIndex(0, 2);
+        endTurnTo(nextIdx);
+      } else {
+        const nextIdx = getNextIndex(0, 1);
+        endTurnTo(nextIdx);
+      }
+    }
+
+    if (updatedCard) {
+      const newHand = hand.filter((_, idx) => idx !== cardIndex);
+      if (newHand.length === 0) setWinner(0);
+    } else {
+      if (hand.length === 0) setWinner(0);
+    }
   }
 
   // 玩家确认出牌按钮
@@ -421,8 +450,30 @@ export default function UnoGame() {
     const card = hand[selectedCardIndex];
     const top = discardPile[discardPile.length - 1];
     if (!canPlayOn(card, top)) return;
-    onPlayerPlayCard(selectedCardIndex);
+
+    // 如果是万能牌且还没有选择颜色，则进入颜色选择状态
+    if ((card.value === "wild" || card.value === "+4") && !chooseColor) {
+      // 设置选择颜色状态，但不立即出牌
+      setChooseColor({
+        card: card,
+        playerIndex: 0,
+        plus4: card.value === "+4",
+      });
+      return;
+    }
+
+    // 如果已经选择了颜色，则使用选择的颜色出牌
+    if (chooseColor) {
+      const { card: wildCard, chosenColor } = chooseColor;
+      const updatedCard = { ...wildCard, color: chosenColor };
+      onPlayerPlayCard(selectedCardIndex, updatedCard);
+    } else {
+      // 非万能牌直接出牌
+      onPlayerPlayCard(selectedCardIndex);
+    }
+
     setSelectedCardIndex(null);
+    setChooseColor(null);
   }
 
   // 玩家点击跳过按钮：实现描述的规则
@@ -486,32 +537,12 @@ export default function UnoGame() {
   // 玩家选择万能牌颜色（wild 或 +4）
   function onChooseColor(c) {
     if (!chooseColor) return;
-    const { cardId, playerIndex, plus4 } = chooseColor;
-    // 把弃牌堆顶替换为带颜色的卡面（id 保留）
-    setDiscardPile((prev) => {
-      const newPrev = prev.slice();
-      const top = newPrev[newPrev.length - 1];
-      if (top.id !== cardId) {
-        // 容错：如果顶牌不是我们期望的，还是修改顶牌
-      }
-      newPrev[newPrev.length - 1] = { ...top, color: c };
-      return newPrev;
-    });
 
-    if (plus4) {
-      const target = getNextIndex(playerIndex, 1);
-      drawCards(target, 4);
-      const nextIdx = getNextIndex(playerIndex, 2);
-      endTurnTo(nextIdx);
-    } else {
-      const nextIdx = getNextIndex(playerIndex, 1);
-      endTurnTo(nextIdx);
-    }
-
-    setChooseColor(null);
-    setPlayerDrawnThisTurn(false);
-    setPlayerDrawnPlayable(false);
-    setLastDrawnCardId(null);
+    // 只记录选择的颜色，不立即出牌
+    setChooseColor((prev) => ({
+      ...prev,
+      chosenColor: c,
+    }));
   }
 
   // 倒计时管理（仅玩家回合）
@@ -673,17 +704,33 @@ export default function UnoGame() {
             </div>
           </div>
 
-          <div className="flex justify-center mb-4">
+          <div className="flex justify-center mb-4 items-center">
             {discardPile.length > 0 && (
-              <div className="w-20 h-28 flex items-center justify-center rounded">
-                <img
-                  src={getCardImage(discardPile[discardPile.length - 1])}
-                  alt={`${discardPile[discardPile.length - 1].color} ${
-                    discardPile[discardPile.length - 1].value
-                  }`}
-                  className="w-full h-full object-cover rounded"
-                />
-              </div>
+              <>
+                {/* 当弃牌堆顶是万能牌且已选择颜色时，显示颜色图案 */}
+                {discardPile[discardPile.length - 1].color !== "black" &&
+                  (discardPile[discardPile.length - 1].value === "wild" ||
+                    discardPile[discardPile.length - 1].value === "+4") && (
+                    <div className="w-12 h-12 flex items-center justify-center rounded mr-2">
+                      <img
+                        src={`/images/color-choose/${
+                          discardPile[discardPile.length - 1].color
+                        }_choose.jpg`}
+                        alt={discardPile[discardPile.length - 1].color}
+                        className="w-full h-full object-cover rounded"
+                      />
+                    </div>
+                  )}
+                <div className="w-20 h-28 flex items-center justify-center rounded">
+                  <img
+                    src={getCardImage(discardPile[discardPile.length - 1])}
+                    alt={`${discardPile[discardPile.length - 1].color} ${
+                      discardPile[discardPile.length - 1].value
+                    }`}
+                    className="w-full h-full object-cover rounded"
+                  />
+                </div>
+              </>
             )}
           </div>
 
@@ -709,14 +756,16 @@ export default function UnoGame() {
                   !canPlayOn(
                     players[0][selectedCardIndex],
                     discardPile[discardPile.length - 1]
-                  )
+                  ) ||
+                  (chooseColor && !chooseColor.chosenColor)
                 }
                 className={`px-3 py-2 rounded ${
                   selectedCardIndex !== null &&
                   canPlayOn(
                     players[0][selectedCardIndex],
                     discardPile[discardPile.length - 1]
-                  )
+                  ) &&
+                  !(chooseColor && !chooseColor.chosenColor)
                     ? "bg-green-500 text-white"
                     : "bg-gray-300 text-gray-500 cursor-not-allowed"
                 }`}
@@ -734,7 +783,9 @@ export default function UnoGame() {
                 <button
                   key={c}
                   onClick={() => onChooseColor(c)}
-                  className="w-16 h-16 p-0 border-0 rounded cursor-pointer"
+                  className={`w-16 h-16 p-0 border-0 rounded cursor-pointer ${
+                    chooseColor.chosenColor === c ? "ring-4 ring-blue-500" : ""
+                  }`}
                 >
                   <img
                     src={`/images/color-choose/${c}_choose.jpg`}

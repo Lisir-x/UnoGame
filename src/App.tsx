@@ -893,35 +893,26 @@ export default function UnoGame() {
           )}
 
           {/* 玩家手牌，可出牌时高亮 */}
-          <div
-            className={`p-2 rounded ${
-              currentPlayer === 0 ? "bg-green-100" : ""
-            }`}
-          >
+          <div className={`p-2 rounded ${currentPlayer === 0 ? "bg-green-100" : ""}`}>
             <div className="font-bold mb-2">你:</div>
             <div className="flex flex-wrap">
               {players[0].map((card, idx) => {
                 const top = discardPile[discardPile.length - 1];
                 const playable = canPlayOn(card, top);
                 const isSelected = selectedCardIndex === idx;
-                const isLastDrawn =
-                  lastDrawnCardId && card.id === lastDrawnCardId;
-                const highlight =
-                  isLastDrawn && playerDrawnThisTurn && playerDrawnPlayable;
                 // 当选中不可出牌时，仍然显示可出牌高亮
                 // 当选中可出牌时，只显示选中高亮而不显示可出牌高亮
                 const showPlayable = playable && !(isSelected && playable);
                 return (
-                  <div
+                  <div 
                     key={card.id}
                     onClick={() => setSelectedCardIndex(idx)}
                     className={`w-20 h-28 m-2 flex items-center justify-center rounded cursor-pointer
                       ${showPlayable ? "ring-4 ring-green-400" : ""}
-                      ${isSelected ? "ring-4 ring-blue-500" : ""}
-                      ${highlight ? "ring-4 ring-yellow-300" : ""}`}
+                      ${isSelected ? "ring-4 ring-blue-500" : ""}`}
                   >
-                    <img
-                      src={getCardImage(card)}
+                    <img 
+                      src={getCardImage(card)} 
                       alt={`${card.color} ${card.value}`}
                       className="w-full h-full object-cover rounded"
                     />

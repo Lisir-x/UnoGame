@@ -1,25 +1,3 @@
-// import { useState } from "react";
-
-// function App() {
-//   const [count, setCount] = useState(0);
-
-//   return (
-//     <main className="flex flex-col items-center gap-8 py-16 max-w-[1280px] mx-auto">
-//       <h1 className="text-4xl font-bold">Hello React & Tailwind!</h1>
-//       <div className="flex flex-row items-center gap-6">
-//         <button
-//           className="bg-sky-300 px-3 py-2 rounded hover:bg-sky-400"
-//           onClick={() => setCount(count + 1)}
-//         >
-//           Count: {count}
-//         </button>
-//       </div>
-//     </main>
-//   );
-// }
-
-// export default App;
-
 import React, { useState, useEffect, useRef } from "react";
 
 // UNO 网页演示版（含主菜单、规则、卡牌图鉴、功能牌、跳过抽牌逻辑）
@@ -31,6 +9,80 @@ const COLOR_CLASS = {
   blue: "bg-blue-600 text-white",
   black: "bg-black text-white",
 };
+
+// 卡牌图片映射
+const CARD_IMAGE_MAP = {
+  // 红色卡牌
+  red_0: "red_0.png",
+  red_1: "red_1.png",
+  red_2: "red_2.png",
+  red_3: "red_3.png",
+  red_4: "red_4.png",
+  red_5: "red_5.png",
+  red_6: "red_6.png",
+  red_7: "red_7.png",
+  red_8: "red_8.png",
+  red_9: "red_9.png",
+  red_skip: "red_skip.png",
+  red_reverse: "red_reverse.png",
+  "red_+2": "red_draw2.png",
+
+  // 黄色卡牌
+  yellow_0: "yellow_0.png",
+  yellow_1: "yellow_1.png",
+  yellow_2: "yellow_2.png",
+  yellow_3: "yellow_3.png",
+  yellow_4: "yellow_4.png",
+  yellow_5: "yellow_5.png",
+  yellow_6: "yellow_6.png",
+  yellow_7: "yellow_7.png",
+  yellow_8: "yellow_8.png",
+  yellow_9: "yellow_9.png",
+  yellow_skip: "yellow_skip.png",
+  yellow_reverse: "yellow_reverse.png",
+  "yellow_+2": "yellow_draw2.png",
+
+  // 绿色卡牌
+  green_0: "green_0.png",
+  green_1: "green_1.png",
+  green_2: "green_2.png",
+  green_3: "green_3.png",
+  green_4: "green_4.png",
+  green_5: "green_5.png",
+  green_6: "green_6.png",
+  green_7: "green_7.png",
+  green_8: "green_8.png",
+  green_9: "green_9.png",
+  green_skip: "green_skip.png",
+  green_reverse: "green_reverse.png",
+  "green_+2": "green_draw2.png",
+
+  // 蓝色卡牌
+  blue_0: "blue_0.png",
+  blue_1: "blue_1.png",
+  blue_2: "blue_2.png",
+  blue_3: "blue_3.png",
+  blue_4: "blue_4.png",
+  blue_5: "blue_5.png",
+  blue_6: "blue_6.png",
+  blue_7: "blue_7.png",
+  blue_8: "blue_8.png",
+  blue_9: "blue_9.png",
+  blue_skip: "blue_skip.png",
+  blue_reverse: "blue_reverse.png",
+  "blue_+2": "blue_draw2.png",
+
+  // 黑色万能牌
+  black_wild: "wild.png",
+  "black_+4": "wild_draw4.png",
+};
+
+// 获取卡牌图片路径的函数
+function getCardImage(card) {
+  const key = `${card.color}_${card.value}`;
+  const imageName = CARD_IMAGE_MAP[key] || "card_back.png";
+  return `/images/cards/${imageName}`;
+}
 
 function id() {
   return Math.random().toString(36).slice(2, 9);
@@ -532,11 +584,12 @@ export default function UnoGame() {
         <h2 className="text-xl font-semibold mb-2">卡牌图鉴（示例）</h2>
         <div className="grid grid-cols-6 gap-3">
           {sample.map((c) => (
-            <div
-              key={c.id}
-              className={`p-3 rounded ${COLOR_CLASS[c.color]} text-center`}
-            >
-              {c.value.toUpperCase()}
+            <div key={c.id} className="p-1 rounded">
+              <img
+                src={getCardImage(c)}
+                alt={`${c.color} ${c.value}`}
+                className="w-full h-full object-cover rounded"
+              />
             </div>
           ))}
         </div>
@@ -606,14 +659,14 @@ export default function UnoGame() {
 
           <div className="flex justify-center mb-4">
             {discardPile.length > 0 && (
-              <div
-                className={`w-20 h-28 flex items-center justify-center rounded ${
-                  COLOR_CLASS[discardPile[discardPile.length - 1].color]
-                }`}
-              >
-                <div className="text-lg font-bold">
-                  {discardPile[discardPile.length - 1].value}
-                </div>
+              <div className="w-20 h-28 flex items-center justify-center rounded">
+                <img
+                  src={getCardImage(discardPile[discardPile.length - 1])}
+                  alt={`${discardPile[discardPile.length - 1].color} ${
+                    discardPile[discardPile.length - 1].value
+                  }`}
+                  className="w-full h-full object-cover rounded"
+                />
               </div>
             )}
           </div>
@@ -690,14 +743,16 @@ export default function UnoGame() {
                 <div
                   key={card.id}
                   onClick={() => setSelectedCardIndex(idx)}
-                  className={`w-20 h-28 m-2 flex items-center justify-center rounded cursor-pointer ${
-                    COLOR_CLASS[card.color]
-                  }
+                  className={`w-20 h-28 m-2 flex items-center justify-center rounded cursor-pointer
                     ${showPlayable ? "ring-4 ring-green-400" : ""}
                     ${isSelected ? "ring-4 ring-blue-500" : ""}
                     ${highlight ? "ring-4 ring-yellow-300" : ""}`}
                 >
-                  <div className="text-lg font-bold">{card.value}</div>
+                  <img
+                    src={getCardImage(card)}
+                    alt={`${card.color} ${card.value}`}
+                    className="w-full h-full object-cover rounded"
+                  />
                 </div>
               );
             })}

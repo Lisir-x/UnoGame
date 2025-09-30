@@ -13,68 +13,68 @@ const COLOR_CLASS = {
 // 卡牌图片映射
 const CARD_IMAGE_MAP = {
   // 红色卡牌
-  red_0: "red_0.png",
-  red_1: "red_1.png",
-  red_2: "red_2.png",
-  red_3: "red_3.png",
-  red_4: "red_4.png",
-  red_5: "red_5.png",
-  red_6: "red_6.png",
-  red_7: "red_7.png",
-  red_8: "red_8.png",
-  red_9: "red_9.png",
-  red_skip: "red_skip.png",
-  red_reverse: "red_reverse.png",
-  "red_+2": "red_draw2.png",
+  red_0: "red_0.jpg",
+  red_1: "red_1.jpg",
+  red_2: "red_2.jpg",
+  red_3: "red_3.jpg",
+  red_4: "red_4.jpg",
+  red_5: "red_5.jpg",
+  red_6: "red_6.jpg",
+  red_7: "red_7.jpg",
+  red_8: "red_8.jpg",
+  red_9: "red_9.jpg",
+  red_skip: "red_skip.jpg",
+  red_reverse: "red_reverse.jpg",
+  "red_+2": "red_draw2.jpg",
 
   // 黄色卡牌
-  yellow_0: "yellow_0.png",
-  yellow_1: "yellow_1.png",
-  yellow_2: "yellow_2.png",
-  yellow_3: "yellow_3.png",
-  yellow_4: "yellow_4.png",
-  yellow_5: "yellow_5.png",
-  yellow_6: "yellow_6.png",
-  yellow_7: "yellow_7.png",
-  yellow_8: "yellow_8.png",
-  yellow_9: "yellow_9.png",
-  yellow_skip: "yellow_skip.png",
-  yellow_reverse: "yellow_reverse.png",
-  "yellow_+2": "yellow_draw2.png",
+  yellow_0: "yellow_0.jpg",
+  yellow_1: "yellow_1.jpg",
+  yellow_2: "yellow_2.jpg",
+  yellow_3: "yellow_3.jpg",
+  yellow_4: "yellow_4.jpg",
+  yellow_5: "yellow_5.jpg",
+  yellow_6: "yellow_6.jpg",
+  yellow_7: "yellow_7.jpg",
+  yellow_8: "yellow_8.jpg",
+  yellow_9: "yellow_9.jpg",
+  yellow_skip: "yellow_skip.jpg",
+  yellow_reverse: "yellow_reverse.jpg",
+  "yellow_+2": "yellow_draw2.jpg",
 
   // 绿色卡牌
-  green_0: "green_0.png",
-  green_1: "green_1.png",
-  green_2: "green_2.png",
-  green_3: "green_3.png",
-  green_4: "green_4.png",
-  green_5: "green_5.png",
-  green_6: "green_6.png",
-  green_7: "green_7.png",
-  green_8: "green_8.png",
-  green_9: "green_9.png",
-  green_skip: "green_skip.png",
-  green_reverse: "green_reverse.png",
-  "green_+2": "green_draw2.png",
+  green_0: "green_0.jpg",
+  green_1: "green_1.jpg",
+  green_2: "green_2.jpg",
+  green_3: "green_3.jpg",
+  green_4: "green_4.jpg",
+  green_5: "green_5.jpg",
+  green_6: "green_6.jpg",
+  green_7: "green_7.jpg",
+  green_8: "green_8.jpg",
+  green_9: "green_9.jpg",
+  green_skip: "green_skip.jpg",
+  green_reverse: "green_reverse.jpg",
+  "green_+2": "green_draw2.jpg",
 
   // 蓝色卡牌
-  blue_0: "blue_0.png",
-  blue_1: "blue_1.png",
-  blue_2: "blue_2.png",
-  blue_3: "blue_3.png",
-  blue_4: "blue_4.png",
-  blue_5: "blue_5.png",
-  blue_6: "blue_6.png",
-  blue_7: "blue_7.png",
-  blue_8: "blue_8.png",
-  blue_9: "blue_9.png",
-  blue_skip: "blue_skip.png",
-  blue_reverse: "blue_reverse.png",
-  "blue_+2": "blue_draw2.png",
+  blue_0: "blue_0.jpg",
+  blue_1: "blue_1.jpg",
+  blue_2: "blue_2.jpg",
+  blue_3: "blue_3.jpg",
+  blue_4: "blue_4.jpg",
+  blue_5: "blue_5.jpg",
+  blue_6: "blue_6.jpg",
+  blue_7: "blue_7.jpg",
+  blue_8: "blue_8.jpg",
+  blue_9: "blue_9.jpg",
+  blue_skip: "blue_skip.jpg",
+  blue_reverse: "blue_reverse.jpg",
+  "blue_+2": "blue_draw2.jpg",
 
   // 黑色万能牌
-  black_wild: "wild.png",
-  "black_+4": "wild_draw4.png",
+  black_wild: "wild.jpg",
+  "black_+4": "wild_draw4.jpg",
 };
 
 // 获取卡牌图片路径的函数
@@ -636,7 +636,11 @@ export default function UnoGame() {
       {screen === "game" && (
         <div>
           <div className="flex items-center gap-4 mb-3">
-            <div>
+            <div
+              className={`p-2 rounded ${
+                currentPlayer === 0 ? "bg-green-200" : ""
+              }`}
+            >
               当前玩家:
               {currentPlayer === 0
                 ? "你"
@@ -652,9 +656,21 @@ export default function UnoGame() {
           </div>
 
           <div className="flex justify-around mb-3">
-            <div>左侧 AI 手牌: {players[1].length}</div>
-            <div>上方 AI 手牌: {players[2].length}</div>
-            <div>右侧 AI 手牌: {players[3].length}</div>
+            <div
+              className={currentPlayer === 1 ? "bg-yellow-200 p-2 rounded" : ""}
+            >
+              左侧 AI 手牌: {players[1].length}
+            </div>
+            <div
+              className={currentPlayer === 2 ? "bg-yellow-200 p-2 rounded" : ""}
+            >
+              上方 AI 手牌: {players[2].length}
+            </div>
+            <div
+              className={currentPlayer === 3 ? "bg-yellow-200 p-2 rounded" : ""}
+            >
+              右侧 AI 手牌: {players[3].length}
+            </div>
           </div>
 
           <div className="flex justify-center mb-4">
@@ -727,35 +743,42 @@ export default function UnoGame() {
           )}
 
           {/* 玩家手牌，可出牌时高亮 */}
-          <div className="flex flex-wrap">
-            {players[0].map((card, idx) => {
-              const top = discardPile[discardPile.length - 1];
-              const playable = canPlayOn(card, top);
-              const isSelected = selectedCardIndex === idx;
-              const isLastDrawn =
-                lastDrawnCardId && card.id === lastDrawnCardId;
-              const highlight =
-                isLastDrawn && playerDrawnThisTurn && playerDrawnPlayable;
-              // 当选中不可出牌时，仍然显示可出牌高亮
-              // 当选中可出牌时，只显示选中高亮而不显示可出牌高亮
-              const showPlayable = playable && !(isSelected && playable);
-              return (
-                <div
-                  key={card.id}
-                  onClick={() => setSelectedCardIndex(idx)}
-                  className={`w-20 h-28 m-2 flex items-center justify-center rounded cursor-pointer
-                    ${showPlayable ? "ring-4 ring-green-400" : ""}
-                    ${isSelected ? "ring-4 ring-blue-500" : ""}
-                    ${highlight ? "ring-4 ring-yellow-300" : ""}`}
-                >
-                  <img
-                    src={getCardImage(card)}
-                    alt={`${card.color} ${card.value}`}
-                    className="w-full h-full object-cover rounded"
-                  />
-                </div>
-              );
-            })}
+          <div
+            className={`p-2 rounded ${
+              currentPlayer === 0 ? "bg-green-100" : ""
+            }`}
+          >
+            <div className="font-bold mb-2">你:</div>
+            <div className="flex flex-wrap">
+              {players[0].map((card, idx) => {
+                const top = discardPile[discardPile.length - 1];
+                const playable = canPlayOn(card, top);
+                const isSelected = selectedCardIndex === idx;
+                const isLastDrawn =
+                  lastDrawnCardId && card.id === lastDrawnCardId;
+                const highlight =
+                  isLastDrawn && playerDrawnThisTurn && playerDrawnPlayable;
+                // 当选中不可出牌时，仍然显示可出牌高亮
+                // 当选中可出牌时，只显示选中高亮而不显示可出牌高亮
+                const showPlayable = playable && !(isSelected && playable);
+                return (
+                  <div
+                    key={card.id}
+                    onClick={() => setSelectedCardIndex(idx)}
+                    className={`w-20 h-28 m-2 flex items-center justify-center rounded cursor-pointer
+                      ${showPlayable ? "ring-4 ring-green-400" : ""}
+                      ${isSelected ? "ring-4 ring-blue-500" : ""}
+                      ${highlight ? "ring-4 ring-yellow-300" : ""}`}
+                  >
+                    <img
+                      src={getCardImage(card)}
+                      alt={`${card.color} ${card.value}`}
+                      className="w-full h-full object-cover rounded"
+                    />
+                  </div>
+                );
+              })}
+            </div>
           </div>
 
           {winner !== null && (

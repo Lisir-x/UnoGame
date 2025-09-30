@@ -1,10 +1,17 @@
 import React, { useState, useEffect, useRef } from "react";
 
+// 定义卡牌类型
+interface Card {
+  id: string;
+  color: string;
+  value: string;
+}
+
 // UNO 网页演示版（含主菜单、规则、卡牌图鉴、功能牌、跳过抽牌逻辑）
 const COLORS = ["yellow", "green", "blue", "red"];
 
 // 卡牌图片映射
-const CARD_IMAGE_MAP = {
+const CARD_IMAGE_MAP: Record<string, string> = {
   // 红色卡牌
   red_0: "red_0.jpg",
   red_1: "red_1.jpg",
@@ -71,7 +78,7 @@ const CARD_IMAGE_MAP = {
 };
 
 // 获取卡牌图片路径的函数
-function getCardImage(card) {
+function getCardImage(card: Card): string {
   // 对于万能牌，始终使用黑色作为颜色，这样即使选择了颜色也仍然显示黑色万能牌
   const isWildCard = card.value === "wild" || card.value === "+4";
   const color = isWildCard ? "black" : card.color;
@@ -80,12 +87,12 @@ function getCardImage(card) {
   return `/images/cards/${imageName}`;
 }
 
-function id() {
+function id(): string {
   return Math.random().toString(36).slice(2, 9);
 }
 
-function generateDeck() {
-  const deck = [];
+function generateDeck(): Card[] {
+  const deck: Card[] = [];
   // 每色：1 个 0，2 个 1~9 与动作牌
   COLORS.forEach((color) => {
     deck.push({ id: id(), color, value: "0" });
@@ -102,7 +109,7 @@ function generateDeck() {
   return shuffle(deck);
 }
 
-function shuffle(array) {
+function shuffle(array: Card[]): Card[] {
   const a = array.slice();
   for (let i = a.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
@@ -111,7 +118,7 @@ function shuffle(array) {
   return a;
 }
 
-function canPlayOn(card, topCard) {
+function canPlayOn(card: Card, topCard: Card): boolean {
   if (!card || !topCard) return false;
   return (
     card.color === "black" ||
@@ -123,35 +130,43 @@ function canPlayOn(card, topCard) {
 export default function UnoGame() {
   const [screen, setScreen] = useState("menu"); // menu | rules | cards | game
 
-  const [deck, setDeck] = useState([]);
-  const [players, setPlayers] = useState([[], [], [], []]);
+  const [deck, setDeck] = useState<Card[]>([]);
+  const [players, setPlayers] = useState<Card[][]>([[], [], [], []]);
   const [currentPlayer, setCurrentPlayer] = useState(0); // 0 是玩家
-  const [discardPile, setDiscardPile] = useState([]);
+  const [discardPile, setDiscardPile] = useState<Card[]>([]);
   const [direction, setDirection] = useState(1); // 1 顺时针， -1 逆时针
   const [aiThinking, setAiThinking] = useState(false);
   const [timer, setTimer] = useState(30);
-  const [chooseColor, setChooseColor] = useState(null); // { cardId, playerIndex, plus4 }
-  const [winner, setWinner] = useState(null);
+  const [chooseColor, setChooseColor] = useState<{
+    card: Card;
+    playerIndex: number;
+    plus4: boolean;
+    chosenColor?: string;
+  } | null>(null);
+  const [winner, setWinner] = useState<number | null>(null);
 
   // 玩家抽牌特殊状态（用于“跳过抽一张”的规则）
   const [playerDrawnThisTurn, setPlayerDrawnThisTurn] = useState(false);
   const [playerDrawnPlayable, setPlayerDrawnPlayable] = useState(false);
-  const [lastDrawnCardId, setLastDrawnCardId] = useState(null);
+  const [lastDrawnCardId, setLastDrawnCardId] = useState<string | null>(null);
 
   //玩家选择的牌索引
-  const [selectedCardIndex, setSelectedCardIndex] = useState(null);
+  const [selectedCardIndex, setSelectedCardIndex] = useState<number | null>(
+    null
+  );
 
-  const aiTimerRef = useRef(null);
+  const aiTimerRef = useRef<number | null>(null);
 
   // ---------- 游戏初始化 ----------
   function startGame() {
     const newDeck = generateDeck();
-    const hands = [[], [], [], []];
+    const hands: Card[][] = [[], [], [], []];
     const deckCopy = newDeck.slice();
     // 发牌，每人 8 张
     for (let i = 0; i < 8; i++) {
       for (let p = 0; p < 4; p++) {
-        hands[p].push(deckCopy.pop());
+        const card = deckCopy.pop();
+        if (card) hands[p].push(card);
       }
     }
     // 翻开一张作为弃牌顶
@@ -159,30 +174,33 @@ export default function UnoGame() {
 
     // 如果弃牌堆顶是万能牌，则继续抽牌直到抽到非万能牌
     while (
+      top &&
       top.color === "black" &&
       (top.value === "wild" || top.value === "+4")
     ) {
       // 将万能牌放回牌堆底部
-      deckCopy.unshift(top);
+      if (top) deckCopy.unshift(top);
       // 重新抽一张牌
       top = deckCopy.pop();
     }
 
-    setDeck(deckCopy);
-    setPlayers(hands);
-    setDiscardPile([top]);
-    setCurrentPlayer(0);
-    setDirection(1);
-    setChooseColor(null);
-    setWinner(null);
-    setPlayerDrawnThisTurn(false);
-    setPlayerDrawnPlayable(false);
-    setLastDrawnCardId(null);
-    setScreen("game");
+    if (top) {
+      setDeck(deckCopy);
+      setPlayers(hands);
+      setDiscardPile([top]);
+      setCurrentPlayer(0);
+      setDirection(1);
+      setChooseColor(null);
+      setWinner(null);
+      setPlayerDrawnThisTurn(false);
+      setPlayerDrawnPlayable(false);
+      setLastDrawnCardId(null);
+      setScreen("game");
+    }
   }
 
   // ---------- 辅助函数：循环与洗牌 ----------
-  function getNextIndex(from, step = 1) {
+  function getNextIndex(from: number, step = 1): number {
     // 例如 step=1 表示下一个人，step=2 表示再下一个（用于 skip +2 效果）
     return (from + direction * step + 4 * 100) % 4;
   }
@@ -199,15 +217,16 @@ export default function UnoGame() {
   }
 
   // 抽一张牌并返回该卡（若无法抽返回 null）
-  function drawOne(playerIndex) {
-    return drawCards(playerIndex, 1)?.[0] || null;
+  function drawOne(playerIndex: number): Card | null {
+    const cards = drawCards(playerIndex, 1);
+    return cards?.[0] || null;
   }
 
-  function drawCards(playerIndex, count) {
+  function drawCards(playerIndex: number, count: number): Card[] {
     if (count <= 0) return [];
 
     let deckCopy = deck.slice();
-    const drawnCards = [];
+    const drawnCards: Card[] = [];
 
     // 收集所有需要的牌
     for (let i = 0; i < count; i++) {
@@ -243,11 +262,11 @@ export default function UnoGame() {
   }
 
   // ---------- 出牌与效果 ----------
-  function applyCardToDiscard(card) {
+  function applyCardToDiscard(card: Card) {
     setDiscardPile((prev) => [...prev, { ...card }]);
   }
 
-  function endTurnTo(nextIndex) {
+  function endTurnTo(nextIndex: number) {
     // 重置玩家临时抽牌状态
     setPlayerDrawnThisTurn(false);
     setPlayerDrawnPlayable(false);
@@ -256,7 +275,7 @@ export default function UnoGame() {
     setCurrentPlayer(nextIndex);
   }
 
-  function handleCardEffectPlayed(card, playerIndex) {
+  function handleCardEffectPlayed(card: Card, playerIndex: number) {
     // card 已经被置入弃牌堆
     if (card.value === "skip") {
       const skipTarget = getNextIndex(playerIndex, 2); // 跳过下一位 -> 下下一位行动
@@ -298,10 +317,12 @@ export default function UnoGame() {
         // 将弃牌顶的颜色设置为 pick
         setDiscardPile((prev) => {
           const newPrev = prev.slice();
-          newPrev[newPrev.length - 1] = {
-            ...newPrev[newPrev.length - 1],
-            color: pick,
-          };
+          if (newPrev[newPrev.length - 1]) {
+            newPrev[newPrev.length - 1] = {
+              ...newPrev[newPrev.length - 1],
+              color: pick,
+            };
+          }
           return newPrev;
         });
         const nextIdx = getNextIndex(playerIndex, 1);
@@ -324,10 +345,12 @@ export default function UnoGame() {
         const pick = counts[0].c;
         setDiscardPile((prev) => {
           const newPrev = prev.slice();
-          newPrev[newPrev.length - 1] = {
-            ...newPrev[newPrev.length - 1],
-            color: pick,
-          };
+          if (newPrev[newPrev.length - 1]) {
+            newPrev[newPrev.length - 1] = {
+              ...newPrev[newPrev.length - 1],
+              color: pick,
+            };
+          }
           return newPrev;
         });
         const target = getNextIndex(playerIndex, 1);
@@ -351,15 +374,18 @@ export default function UnoGame() {
     if (currentPlayer !== 0) {
       setAiThinking(true);
       // 1~3 秒延迟
-      aiTimerRef.current = setTimeout(() => {
+      const timer = window.setTimeout(() => {
         aiPlay(currentPlayer);
         setAiThinking(false);
       }, Math.floor(Math.random() * 2000) + 1000);
-      return () => clearTimeout(aiTimerRef.current);
+      
+      aiTimerRef.current = timer;
+      
+      return () => clearTimeout(timer);
     }
   }, [currentPlayer, screen, winner]);
 
-  function aiPlay(playerIndex) {
+  function aiPlay(playerIndex: number) {
     const hand = players[playerIndex].slice();
     const top = discardPile[discardPile.length - 1];
     // 先找能出的牌（从左到右或任意策略，这里选第一个）
@@ -399,7 +425,7 @@ export default function UnoGame() {
 
   // ---------- 玩家行为（出牌 / 跳过 / 提示） ----------
   // 玩家点击手牌出牌
-  function onPlayerPlayCard(cardIndex, updatedCard = null) {
+  function onPlayerPlayCard(cardIndex: number, updatedCard: Card | null = null) {
     if (screen !== "game" || currentPlayer !== 0 || winner !== null) return;
     const hand = players[0].slice();
     const card = updatedCard || hand[cardIndex];
@@ -469,9 +495,12 @@ export default function UnoGame() {
 
     // 如果已经选择了颜色，则使用选择的颜色出牌
     if (chooseColor) {
-      const { card: wildCard, chosenColor } = chooseColor;
-      const updatedCard = { ...wildCard, color: chosenColor };
-      onPlayerPlayCard(selectedCardIndex, updatedCard);
+      const chosenColor = chooseColor.chosenColor;
+      if (chosenColor) {
+        const { card: wildCard } = chooseColor;
+        const updatedCard = { ...wildCard, color: chosenColor };
+        onPlayerPlayCard(selectedCardIndex, updatedCard);
+      }
     } else {
       // 非万能牌直接出牌
       onPlayerPlayCard(selectedCardIndex);
@@ -540,14 +569,17 @@ export default function UnoGame() {
   }
 
   // 玩家选择万能牌颜色（wild 或 +4）
-  function onChooseColor(c) {
+  function onChooseColor(c: string) {
     if (!chooseColor) return;
 
     // 只记录选择的颜色，不立即出牌
-    setChooseColor((prev) => ({
-      ...prev,
-      chosenColor: c,
-    }));
+    setChooseColor((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        chosenColor: c,
+      };
+    });
   }
 
   // 倒计时管理（仅玩家回合）
@@ -603,7 +635,7 @@ export default function UnoGame() {
   }
 
   function CardsView() {
-    const sample = [];
+    const sample: Card[] = [];
     COLORS.forEach((color) => {
       sample.push({ id: id(), color, value: "0" });
       for (let v = 1; v <= 9; v++)
@@ -675,7 +707,7 @@ export default function UnoGame() {
 
   // ---------- 主渲染 ----------
   return (
-    <div className="p-4 min-h-screen relative">
+    <div className="p-2 sm:p-4 min-h-screen relative">
       {screen === "menu" && (
         <div
           className="absolute inset-0 bg-cover bg-center opacity-20"
@@ -684,22 +716,22 @@ export default function UnoGame() {
       )}
       {screen === "menu" && (
         <div className="flex flex-col gap-3 max-w-sm mx-auto h-screen justify-center relative z-10">
-          <h1 className="text-2xl font-bold text-center">UNO 网页演示</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-center">UNO 网页演示</h1>
           <button
             onClick={startGame}
-            className="px-4 py-2 bg-green-500 text-white rounded"
+            className="px-4 py-3 sm:px-4 sm:py-2 bg-green-500 text-white rounded text-lg active:bg-green-600 transition-colors duration-200"
           >
             开始游戏
           </button>
           <button
             onClick={() => setScreen("rules")}
-            className="px-4 py-2 bg-gray-200 rounded"
+            className="px-4 py-3 sm:px-4 sm:py-2 bg-gray-200 rounded text-lg active:bg-gray-300 transition-colors duration-200"
           >
             游戏规则
           </button>
           <button
             onClick={() => setScreen("cards")}
-            className="px-4 py-2 bg-gray-200 rounded"
+            className="px-4 py-3 sm:px-4 sm:py-2 bg-gray-200 rounded text-lg active:bg-gray-300 transition-colors duration-200"
           >
             卡牌图鉴
           </button>
@@ -711,7 +743,7 @@ export default function UnoGame() {
 
       {screen === "game" && (
         <div>
-          <div className="flex items-center gap-4 mb-3">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-4 mb-3 text-sm sm:text-base">
             <div
               className={`p-2 rounded ${
                 currentPlayer === 0 ? "bg-green-200" : ""
@@ -732,13 +764,13 @@ export default function UnoGame() {
 
           <div className="flex justify-around mb-3">
             <div className="flex flex-col items-center">
-              <div className="text-center mb-1">左侧 AI</div>
+              <div className="text-center mb-1 text-xs sm:text-sm">左侧 AI</div>
               <div
                 className={
-                  currentPlayer === 1 ? "bg-yellow-200 p-2 rounded" : ""
+                  currentPlayer === 1 ? "bg-yellow-200 p-1 sm:p-2 rounded" : ""
                 }
               >
-                <div className="w-14 h-22 flex items-center justify-center rounded">
+                <div className="w-10 h-14 sm:w-14 sm:h-22 flex items-center justify-center rounded">
                   <img
                     src="/images/cards/card_back.jpg"
                     alt="AI手牌"
@@ -746,16 +778,16 @@ export default function UnoGame() {
                   />
                 </div>
               </div>
-              <div className="mt-1">x{players[1].length}</div>
+              <div className="mt-1 text-xs sm:text-sm">x{players[1].length}</div>
             </div>
             <div className="flex flex-col items-center">
-              <div className="text-center mb-1">上方 AI</div>
+              <div className="text-center mb-1 text-xs sm:text-sm">上方 AI</div>
               <div
                 className={
-                  currentPlayer === 2 ? "bg-yellow-200 p-2 rounded" : ""
+                  currentPlayer === 2 ? "bg-yellow-200 p-1 sm:p-2 rounded" : ""
                 }
               >
-                <div className="w-14 h-22 flex items-center justify-center rounded">
+                <div className="w-10 h-14 sm:w-14 sm:h-22 flex items-center justify-center rounded">
                   <img
                     src="/images/cards/card_back.jpg"
                     alt="AI手牌"
@@ -763,16 +795,16 @@ export default function UnoGame() {
                   />
                 </div>
               </div>
-              <div className="mt-1">x{players[2].length}</div>
+              <div className="mt-1 text-xs sm:text-sm">x{players[2].length}</div>
             </div>
             <div className="flex flex-col items-center">
-              <div className="text-center mb-1">右侧 AI</div>
+              <div className="text-center mb-1 text-xs sm:text-sm">右侧 AI</div>
               <div
                 className={
-                  currentPlayer === 3 ? "bg-yellow-200 p-2 rounded" : ""
+                  currentPlayer === 3 ? "bg-yellow-200 p-1 sm:p-2 rounded" : ""
                 }
               >
-                <div className="w-14 h-22 flex items-center justify-center rounded">
+                <div className="w-10 h-14 sm:w-14 sm:h-22 flex items-center justify-center rounded">
                   <img
                     src="/images/cards/card_back.jpg"
                     alt="AI手牌"
@@ -780,21 +812,21 @@ export default function UnoGame() {
                   />
                 </div>
               </div>
-              <div className="mt-1">x{players[3].length}</div>
+              <div className="mt-1 text-xs sm:text-sm">x{players[3].length}</div>
             </div>
           </div>
 
           <div className="flex justify-start mb-4 items-center">
             {/* 牌堆显示 */}
-            <div className="flex flex-col items-center mr-8">
-              <div className="w-14 h-22 flex items-center justify-center rounded">
+            <div className="flex flex-col items-center mr-4 sm:mr-8">
+              <div className="w-10 h-14 sm:w-14 sm:h-22 flex items-center justify-center rounded">
                 <img
                   src="/images/cards/card_back.jpg"
                   alt="牌堆"
                   className="w-full h-full object-cover rounded"
                 />
               </div>
-              <div className="mt-1">牌堆: {deck.length} 张</div>
+              <div className="mt-1 text-xs sm:text-sm">牌堆: {deck.length} 张</div>
             </div>
 
             {/* 弃牌堆显示 */}
@@ -805,7 +837,7 @@ export default function UnoGame() {
                   {discardPile[discardPile.length - 1].color !== "black" &&
                     (discardPile[discardPile.length - 1].value === "wild" ||
                       discardPile[discardPile.length - 1].value === "+4") && (
-                      <div className="w-12 h-12 flex items-center justify-center rounded mr-2">
+                      <div className="w-8 h-8 sm:w-12 sm:h-12 flex items-center justify-center rounded mr-2">
                         <img
                           src={`/images/color-choose/${
                             discardPile[discardPile.length - 1].color
@@ -815,7 +847,7 @@ export default function UnoGame() {
                         />
                       </div>
                     )}
-                  <div className="w-20 h-28 flex items-center justify-center rounded">
+                  <div className="w-14 h-20 sm:w-20 sm:h-28 flex items-center justify-center rounded">
                     <img
                       src={getCardImage(discardPile[discardPile.length - 1])}
                       alt={`${discardPile[discardPile.length - 1].color} ${
@@ -831,16 +863,16 @@ export default function UnoGame() {
 
           {/* 操作按钮 */}
           {currentPlayer === 0 && !winner && (
-            <div className="flex items-center gap-3 mb-3">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-3">
               <button
                 onClick={onPlayerSkip}
-                className="px-3 py-2 bg-gray-300 rounded"
+                className="px-3 py-2 bg-gray-300 rounded text-sm sm:text-base active:bg-gray-400 transition-colors duration-200 min-w-[80px]"
               >
                 跳过
               </button>
               <button
                 onClick={onPlayerHint}
-                className="px-3 py-2 bg-yellow-300 rounded"
+                className="px-3 py-2 bg-yellow-300 rounded text-sm sm:text-base active:bg-yellow-400 transition-colors duration-200 min-w-[80px]"
               >
                 提示
               </button>
@@ -852,34 +884,34 @@ export default function UnoGame() {
                     players[0][selectedCardIndex],
                     discardPile[discardPile.length - 1]
                   ) ||
-                  (chooseColor && !chooseColor.chosenColor)
+                  (chooseColor ? !chooseColor.chosenColor : false)
                 }
-                className={`px-3 py-2 rounded ${
+                className={`px-3 py-2 rounded text-sm sm:text-base min-w-[80px] active:opacity-90 transition-opacity duration-200 ${
                   selectedCardIndex !== null &&
                   canPlayOn(
                     players[0][selectedCardIndex],
                     discardPile[discardPile.length - 1]
                   ) &&
-                  !(chooseColor && !chooseColor.chosenColor)
+                  !(chooseColor ? !chooseColor.chosenColor : false)
                     ? "bg-green-500 text-white"
                     : "bg-gray-300 text-gray-500 cursor-not-allowed"
                 }`}
               >
                 出牌
               </button>
-              <div className="ml-auto">倒计时: {timer}s</div>
+              <div className="ml-auto text-sm sm:text-base">倒计时: {timer}s</div>
             </div>
           )}
 
           {/* 变色选择 */}
           {chooseColor && currentPlayer === 0 && (
-            <div className="flex gap-2 mb-3">
+            <div className="flex gap-1 sm:gap-2 mb-3 justify-center">
               {COLORS.map((c) => (
                 <button
                   key={c}
                   onClick={() => onChooseColor(c)}
-                  className={`w-16 h-16 p-0 border-0 rounded cursor-pointer ${
-                    chooseColor.chosenColor === c ? "ring-4 ring-blue-500" : ""
+                  className={`w-12 h-12 sm:w-16 sm:h-16 p-0 border-0 rounded cursor-pointer ${
+                    chooseColor.chosenColor === c ? "ring-2 sm:ring-4 ring-blue-500" : ""
                   }`}
                 >
                   <img
@@ -894,8 +926,8 @@ export default function UnoGame() {
 
           {/* 玩家手牌，可出牌时高亮 */}
           <div className={`p-2 rounded ${currentPlayer === 0 ? "bg-green-100" : ""}`}>
-            <div className="font-bold mb-2">你:</div>
-            <div className="flex flex-wrap">
+            <div className="font-bold mb-2 text-sm sm:text-base">你:</div>
+            <div className="flex flex-nowrap overflow-x-auto pb-2 touch-pan-x">
               {players[0].map((card, idx) => {
                 const top = discardPile[discardPile.length - 1];
                 const playable = canPlayOn(card, top);
@@ -907,9 +939,9 @@ export default function UnoGame() {
                   <div 
                     key={card.id}
                     onClick={() => setSelectedCardIndex(idx)}
-                    className={`w-20 h-28 m-2 flex items-center justify-center rounded cursor-pointer
-                      ${showPlayable ? "ring-4 ring-green-400" : ""}
-                      ${isSelected ? "ring-4 ring-blue-500" : ""}`}
+                    className={`w-14 h-20 sm:w-20 sm:h-28 m-1 sm:m-2 flex items-center justify-center rounded cursor-pointer flex-shrink-0
+                      ${showPlayable ? "ring-2 sm:ring-4 ring-green-400" : ""}
+                      ${isSelected ? "ring-2 sm:ring-4 ring-blue-500" : ""}`}
                   >
                     <img 
                       src={getCardImage(card)} 
@@ -923,16 +955,16 @@ export default function UnoGame() {
           </div>
 
           {winner !== null && (
-            <div className="mt-4 text-2xl text-green-600">
+            <div className="mt-4 text-xl sm:text-2xl text-green-600 text-center">
               游戏结束：{winner === 0 ? "你" : `AI${winner}`} 获胜！
             </div>
           )}
 
           {/* 返回菜单 */}
-          <div className="mt-6">
+          <div className="mt-4 sm:mt-6 text-center">
             <button
               onClick={() => setScreen("menu")}
-              className="px-3 py-2 bg-gray-200 rounded"
+              className="px-4 py-2 bg-gray-200 rounded text-sm sm:text-base active:bg-gray-300 transition-colors duration-200"
             >
               返回菜单
             </button>

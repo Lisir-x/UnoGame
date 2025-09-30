@@ -1,3 +1,24 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* 添加移动端优化样式 */
+@media (max-width: 640px) {
+  body {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  button {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  .card-container {
+    scroll-snap-type: x mandatory;
+  }
+  
+  .card {
+    scroll-snap-align: center;
+  }
+}

@@ -1,8 +1,24 @@
-# React + Tailwind
+# UNO游戏
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules. One top of the standard Vite setup, [tailwindcss](https://tailwindcss.com/) is installed and ready to be used in React components.
+## 如何分发给其他用户
 
-Additional references:
-* [Getting started with Vite](https://vitejs.dev/guide/)
-* [Tailwind documentation](https://tailwindcss.com/docs/installation)
+已经构建好的静态文件在 `dist` 目录中，您可以通过以下方式分享给其他用户：
+
+### 方法1：直接分享dist文件夹
+
+1. 将整个 `dist` 文件夹压缩成zip文件
+2. 分享给其他用户
+3. 用户解压后，双击 `index.html` 即可在浏览器中玩游戏
+
+### 方法2：部署到网络
+
+1. 将 `dist` 文件夹内容上传到任何静态网站托管服务
+   - GitHub Pages
+   - Vercel
+   - Netlify
+   - 或任何支持静态网站的服务器
+
+2. 分享网址给其他用户
+
+无需任何环境配置，用户只需一个浏览器即可游玩！
 

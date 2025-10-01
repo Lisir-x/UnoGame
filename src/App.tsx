@@ -621,11 +621,52 @@ export default function UnoGame() {
     const top = discardPile[discardPile.length - 1];
     for (let i = hand.length - 1; i >= 0; i--) {
       if (canPlayOn(hand[i], top)) {
-        onPlayerPlayCard(i);
+        const card = hand[i];
+        // 如果是万能牌，自动选择手中最多颜色的牌
+        if (card.color === "black" && (card.value === "wild" || card.value === "+4")) {
+          // 计算手中各颜色牌的数量
+          const colorCounts = COLORS.map((color) => ({
+            color,
+            count: hand.filter((c) => c.color === color).length,
+          }));
+          
+          // 按数量排序，选择最多的颜色
+          colorCounts.sort((a, b) => b.count - a.count);
+          const chosenColor = colorCounts[0].color;
+          
+          // 创建更新后的卡牌（指定颜色）
+          const updatedCard = { ...card, color: chosenColor };
+          onPlayerPlayCard(i, updatedCard);
+        } else {
+          // 普通牌直接出
+          onPlayerPlayCard(i);
+        }
         return;
       }
     }
-    // 没有可出：提示抽牌逻辑（不自动抽）
+    // 没有可出的牌 -> 自动抽一张牌
+    const drawn = drawOne(0);
+    if (!drawn) {
+      // 无法抽牌 -> 直接结束回合
+      endTurnTo(getNextIndex(0, 1));
+      return;
+    }
+    setLastDrawnCardId(drawn.id);
+    // 抽到后判断是否可出
+    if (canPlayOn(drawn, top)) {
+      // 高亮并保留回合，让玩家选择是否打出
+      setPlayerDrawnThisTurn(true);
+      setPlayerDrawnPlayable(true);
+      // 玩家可以选择出牌或再次点击跳过
+      return;
+    } else {
+      // 抽到的牌不可出 -> 直接结束回合
+      setPlayerDrawnThisTurn(false);
+      setPlayerDrawnPlayable(false);
+      setLastDrawnCardId(null);
+      endTurnTo(getNextIndex(0, 1));
+      return;
+    }
   }
 
   // 玩家选择万能牌颜色（wild 或 +4）
@@ -672,23 +713,70 @@ export default function UnoGame() {
   // ---------- 菜单 / 规则 / 图鉴 视图 ----------
   function RulesView() {
     return (
-      <div>
-        <h2 className="text-xl font-semibold mb-2">UNO 规则（简要）</h2>
-        <ul className="list-disc pl-6">
-          <li>
-            每人 8 张牌，每回合出一张牌，需匹配颜色或数字/符号或出万能牌。
-          </li>
-          <li>
-            特殊牌：skip（跳过）、reverse（反转）、+2（下一位摸 2 并跳过）。
-          </li>
-          <li>万能牌：wild（变色）、+4（变色并让下一位摸 4 并跳过）。</li>
-          <li>牌堆耗尽时把弃牌（除顶牌）洗回牌堆继续。</li>
-        </ul>
+      <div className="max-w-2xl mx-auto p-4">
+        <h2 className="text-2xl font-bold mb-4 text-center">UNO 游戏规则</h2>
+        
+        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+          <h3 className="text-xl font-semibold mb-3 text-blue-700">游戏目标</h3>
+          <p className="mb-4">成为第一个打出手上所有牌的玩家。</p>
+        </div>
+
+        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+          <h3 className="text-xl font-semibold mb-3 text-blue-700">卡牌类型</h3>
+          
+          <h4 className="text-lg font-medium mb-2 mt-4 text-green-600">数字牌 (0-9)</h4>
+          <ul className="list-disc pl-6 mb-3">
+            <li>每种颜色有两张 1-9 的数字牌和一张 0 的数字牌</li>
+          </ul>
+          
+          <h4 className="text-lg font-medium mb-2 mt-4 text-green-600">功能牌</h4>
+          <ul className="list-disc pl-6 mb-3">
+            <li><strong>Skip (跳过)</strong>: 跳过下家回合</li>
+            <li><strong>Reverse (反转)</strong>: 反转出牌顺序</li>
+            <li><strong>+2</strong>: 下家摸两张牌并跳过回合</li>
+          </ul>
+          
+          <h4 className="text-lg font-medium mb-2 mt-4 text-green-600">万能牌</h4>
+          <ul className="list-disc pl-6 mb-3">
+            <li><strong>Wild (变色)</strong>: 可以在任何时候打出，并指定下家出牌颜色</li>
+            <li><strong>Wild +4</strong>: 可指定出牌颜色并让下家摸四张牌并跳过回合</li>
+            <li className="text-red-600"><strong>注意</strong>: 变色+4 只能在玩家没有其他符合当前颜色的牌时才能打出</li>
+          </ul>
+        </div>
+
+        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+          <h3 className="text-xl font-semibold mb-3 text-blue-700">游戏流程</h3>
+          <ol className="list-decimal pl-6 mb-3 space-y-2">
+            <li>每位玩家分得8张牌，剩余的牌作为牌堆放在中央</li>
+            <li>翻开牌堆顶的第一张牌作为起始弃牌</li>
+            <li>初始按顺时针方向进行游戏</li>
+            <li>必须打出与弃牌堆顶牌颜色、数字或功能相同，或者打出万能牌</li>
+            <li>如果玩家无法出牌，则必须从牌堆摸一张牌。如果这张牌可以打出，则可以立即打出</li>
+            <li>如果摸到的牌不能打出，则轮到下一位玩家</li>
+          </ol>
+        </div>
+
+        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+          <h3 className="text-xl font-semibold mb-3 text-blue-700">特殊规则</h3>
+          
+          <h4 className="text-lg font-medium mb-2 mt-4 text-green-600">出牌限制</h4>
+          <ul className="list-disc pl-6 mb-3">
+            <li>打出 变色+4 时，如果下一位玩家怀疑你有符合当前颜色的牌，可以提出质疑</li>
+            <li>如果质疑成立（你确实有符合当前颜色的牌），你需要摸4张牌作为惩罚</li>
+            <li>如果质疑不成立，质疑者需要摸6张牌</li>
+          </ul>
+          
+          <h4 className="text-lg font-medium mb-2 mt-4 text-green-600">胜利条件</h4>
+          <ul className="list-disc pl-6 mb-3">
+            <li>当一名玩家打出手上最后一张牌时，该玩家获胜</li>
+          </ul>
+        </div>
+
         <button
-          className="mt-4 px-3 py-2 bg-gray-200 rounded"
+          className="mt-4 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-200 font-medium"
           onClick={() => setScreen("menu")}
         >
-          返回
+          返回主菜单
         </button>
       </div>
     );

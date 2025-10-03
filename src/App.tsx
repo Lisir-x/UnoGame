@@ -888,7 +888,7 @@ export default function UnoGame() {
       )}
       {screen === "menu" && (
         <div className="flex flex-col gap-3 max-w-sm mx-auto h-screen justify-center relative z-10">
-          <h1 className="text-2xl sm:text-3xl font-bold text-center">UNO 网页演示</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-center">UNO 网页小游戏</h1>
           <button
             onClick={startGame}
             className="px-4 py-3 sm:px-4 sm:py-2 bg-green-500 text-white rounded text-lg active:bg-green-600 transition-colors duration-200"
@@ -1128,7 +1128,7 @@ export default function UnoGame() {
 
           {winner !== null && (
             <div className="mt-4 text-xl sm:text-2xl text-green-600 text-center">
-              游戏结束：{winner === 0 ? "你" : `AI${winner}`} 获胜！
+              游戏结束：{winner === 0 ? "你" : winner === 1 ? "左侧AI" : winner === 2 ? "上方AI" : "右侧AI"} 获胜！
             </div>
           )}
 

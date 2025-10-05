@@ -9,7 +9,11 @@
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
     "tauri": "cargo tauri dev",
-    "build:tauri-win": "npm run build && cargo tauri build"
+    "build:tauri-win": "npm run build && cargo tauri build",
+    "build:pwa": "npm run build",
+    "build:gh-pages": "tsc && vite build --config vite.github-pages.config.ts",
+    "predeploy": "npm run build:gh-pages",
+    "deploy": "gh-pages -d dist"
   },
   "dependencies": {
     "react": "^19.0.0",
@@ -27,9 +31,11 @@
     "eslint": "^9.16.0",
     "eslint-plugin-react-hooks": "^5.1.0",
     "eslint-plugin-react-refresh": "^0.4.16",
+    "gh-pages": "^6.3.0",
     "postcss": "8.4.49",
     "tailwindcss": "3.4.16",
     "typescript": "^5.7.2",
-    "vite": "^6.0.3"
+    "vite": "^6.0.3",
+    "vite-plugin-pwa": "^0.20.0"
   }
 }

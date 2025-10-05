@@ -2,9 +2,9 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { VitePWA } from 'vite-plugin-pwa';
 
-// https://vitejs.dev/config/
+// 专门用于GitHub Pages部署的配置
 export default defineConfig({
-  base: './',
+  base: '/UnoGame/', // 根据你的仓库名称修改这里
   plugins: [
     react(),
     VitePWA({
@@ -44,9 +44,5 @@ export default defineConfig({
         assetFileNames: 'assets/[name]-[hash].[ext]'
       }
     }
-  },
-  server: {
-    host: true,
-    port: 5173
   }
 });

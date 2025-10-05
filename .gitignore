@@ -1,3 +1,5 @@
 .codesandbox
 .devcontainer
 .vscode
+node_modules
+dist

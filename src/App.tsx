@@ -84,7 +84,8 @@ function getCardImage(card: Card): string {
   const color = isWildCard ? "black" : card.color;
   const key = `${color}_${card.value}`;
   const imageName = CARD_IMAGE_MAP[key] || "card_back.jpg";
-  return `/images/cards/${imageName}`;
+  // 使用相对路径而不是绝对路径，以适应不同的base路径
+  return `images/cards/${imageName}`;
 }
 
 function id(): string {
@@ -168,14 +169,15 @@ export default function UnoGame() {
     // 获取所有需要预加载的图片URL
     const cardImageUrls: string[] = [];
     Object.values(CARD_IMAGE_MAP).forEach(imageName => {
-      cardImageUrls.push(`/images/cards/${imageName}`);
+      // 使用相对路径而不是绝对路径
+      cardImageUrls.push(`images/cards/${imageName}`);
     });
     
     const colorChooseImages = [
-      '/images/color-choose/red_choose.jpg',
-      '/images/color-choose/yellow_choose.jpg',
-      '/images/color-choose/green_choose.jpg',
-      '/images/color-choose/blue_choose.jpg'
+      'images/color-choose/red_choose.jpg',
+      'images/color-choose/yellow_choose.jpg',
+      'images/color-choose/green_choose.jpg',
+      'images/color-choose/blue_choose.jpg'
     ];
     
     const allImageUrls = [...cardImageUrls, ...colorChooseImages];
@@ -797,26 +799,26 @@ export default function UnoGame() {
 
     // 添加卡背和颜色选择图片示例
     const additionalCards = [
-      { id: "cardback", name: "卡背", image: "/images/cards/card_back.jpg" },
+      { id: "cardback", name: "卡背", image: "images/cards/card_back.jpg" },
       {
         id: "red_choose",
         name: "红色选择",
-        image: "/images/color-choose/red_choose.jpg",
+        image: "images/color-choose/red_choose.jpg",
       },
       {
         id: "yellow_choose",
         name: "黄色选择",
-        image: "/images/color-choose/yellow_choose.jpg",
+        image: "images/color-choose/yellow_choose.jpg",
       },
       {
         id: "green_choose",
         name: "绿色选择",
-        image: "/images/color-choose/green_choose.jpg",
+        image: "images/color-choose/green_choose.jpg",
       },
       {
         id: "blue_choose",
         name: "蓝色选择",
-        image: "/images/color-choose/blue_choose.jpg",
+        image: "images/color-choose/blue_choose.jpg",
       },
     ];
 

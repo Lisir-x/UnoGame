@@ -885,7 +885,7 @@ export default function UnoGame() {
       {screen === "menu" && (
         <div
           className="absolute inset-0 bg-cover bg-center opacity-20"
-          style={{ backgroundImage: "url('/images/cards/card_back.jpg')" }}
+          style={{ backgroundImage: "url('images/cards/card_back.jpg')" }}
         ></div>
       )}
       {screen === "menu" && (
@@ -946,7 +946,7 @@ export default function UnoGame() {
               >
                 <div className="w-10 h-14 sm:w-14 sm:h-22 flex items-center justify-center rounded">
                   <img
-                    src="/images/cards/card_back.jpg"
+                    src="images/cards/card_back.jpg"
                     alt="AI手牌"
                     className="w-full h-full object-cover rounded"
                   />
@@ -963,7 +963,7 @@ export default function UnoGame() {
               >
                 <div className="w-10 h-14 sm:w-14 sm:h-22 flex items-center justify-center rounded">
                   <img
-                    src="/images/cards/card_back.jpg"
+                    src="images/cards/card_back.jpg"
                     alt="AI手牌"
                     className="w-full h-full object-cover rounded"
                   />
@@ -980,7 +980,7 @@ export default function UnoGame() {
               >
                 <div className="w-10 h-14 sm:w-14 sm:h-22 flex items-center justify-center rounded">
                   <img
-                    src="/images/cards/card_back.jpg"
+                    src="images/cards/card_back.jpg"
                     alt="AI手牌"
                     className="w-full h-full object-cover rounded"
                   />
@@ -995,7 +995,7 @@ export default function UnoGame() {
             <div className="flex flex-col items-center mr-4 sm:mr-8">
               <div className="w-10 h-14 sm:w-14 sm:h-22 flex items-center justify-center rounded">
                 <img
-                  src="/images/cards/card_back.jpg"
+                  src="images/cards/card_back.jpg"
                   alt="牌堆"
                   className="w-full h-full object-cover rounded"
                 />
@@ -1013,7 +1013,7 @@ export default function UnoGame() {
                       discardPile[discardPile.length - 1].value === "+4") && (
                       <div className="w-8 h-8 sm:w-12 sm:h-12 flex items-center justify-center rounded mr-2">
                         <img
-                          src={`/images/color-choose/${
+                          src={`images/color-choose/${
                             discardPile[discardPile.length - 1].color
                           }_choose.jpg`}
                           alt={discardPile[discardPile.length - 1].color}
@@ -1089,7 +1089,7 @@ export default function UnoGame() {
                   }`}
                 >
                   <img
-                    src={`/images/color-choose/${c}_choose.jpg`}
+                    src={`images/color-choose/${c}_choose.jpg`}
                     alt={c}
                     className="w-full h-full object-cover rounded"
                   />
